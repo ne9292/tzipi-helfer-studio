@@ -1,0 +1,381 @@
+<!-- קובץ ה-HTML השלם של קומפוננטת יומן השיעורים עם רכיב בחירה וסינון חכם -->
+
+<div class="page-header">
+  <div class="page-title">
+    <h1>יומן שיעורים</h1>
+    <p>נהלי את לוח הזמנים של הסטודיו</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-primary" (click)="openNew()">+ שיעור חדש</button>
+  </div>
+</div>
+
+<div class="card cal-card">
+  <full-calendar [options]="calendarOptions()" />
+</div>
+
+<!-- ─── מודאל יצירה ועריכת שיעור (Create / Edit Modal) ─── -->
+@if (showSessionModal) {
+  <div class="modal-backdrop" (click)="showSessionModal = false">
+    <div class="modal modal-lg" (click)="$event.stopPropagation()">
+
+      <div class="modal-head">
+        <h2>{{ editMode ? 'עריכת שיעור' : 'שיעור חדש' }}</h2>
+        <p>{{ editMode ? 'עדכני את פרטי השיעור' : 'הוסיפי שיעור ליומן' }}</p>
+      </div>
+
+      <div class="modal-body">
+
+        @if (conflictName) {
+          <div class="alert-error">
+            <span class="alert-icon">⚠️</span>
+            כבר קיים שיעור "<strong>{{ conflictName }}</strong>" בשעה זו — בחרי שעה אחרת.
+          </div>
+        }
+
+        <div class="form-field">
+          <label>שם השיעור</label>
+          <input [(ngModel)]="form.title" placeholder="פילאטיס, יוגה, אימון אישי...">
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-field">
+            <label>סוג שיעור</label>
+            <select [(ngModel)]="form.session_type">
+              <option value="group">👥 קבוצתי</option>
+              <option value="private">🔒 פרטי</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>משך (דקות)</label>
+            <input type="number" [(ngModel)]="form.duration_minutes" min="15" step="15">
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>תאריך ושעה</label>
+          <input type="datetime-local" [(ngModel)]="form.start_time">
+        </div>
+
+        @if (form.session_type === 'group') {
+          <div class="form-row-2">
+            <div class="form-field">
+              <label>מקסימום משתתפות</label>
+              <input type="number" [(ngModel)]="form.max_capacity" min="1">
+            </div>
+            <div class="form-field">
+              <label>מחיר לחודש (₪)</label>
+              <div class="input-prefix-wrap">
+                <span class="prefix">₪</span>
+                <input type="number" [(ngModel)]="form.price_per_month" min="0" placeholder="0">
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (form.session_type === 'private') {
+          <div class="form-field">
+            <label>מחיר לחודש (₪)</label>
+            <div class="input-prefix-wrap">
+              <span class="prefix">₪</span>
+              <input type="number" [(ngModel)]="form.price_per_month" min="0" placeholder="0">
+            </div>
+          </div>
+        }
+
+        <!-- ════════════════════════════════════════════
+             אזור שיבוץ תלמידות מובנה - נפתח בלחיצה וכולל חיפוש
+        ════════════════════════════════════════════ -->
+        <div class="form-field" style="position: relative;">
+          <label style="display: flex; justify-content: space-between; align-items: center;">
+            <span>שבץ תלמידות לשיעור</span>
+            @if (form.session_type === 'group') {
+              <span style="font-size: 11px; color: var(--c-text-3); font-weight: bold;">
+                נבחרו {{ form.selected_client_ids?.length || 0 }} מתוך {{ form.max_capacity || '∞' }}
+              </span>
+            }
+          </label>
+
+          <!-- כפתור לפתיחה וסגירה של התיבה -->
+          <div class="dropdown-trigger" (click)="showClientsDropdown = !showClientsDropdown" 
+               style="padding: 10px 14px; border: 2px solid var(--c-border); border-radius: var(--r-md); background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 44px; user-select: none;">
+            <span style="color: var(--c-text-2); font-size: 13.5px; font-weight: 500;">
+              @if ((form.selected_client_ids?.length || 0) === 0) {
+                🔍 לחצי לבחירה וחיפוש תלמידות...
+              } @else {
+                👥 נבחרו {{ form.selected_client_ids?.length }} תלמידות לשיעור
+              }
+            </span>
+            <span style="font-size: 11px; color: var(--c-text-3);">{{ showClientsDropdown ? '▲' : '▼' }}</span>
+          </div>
+
+          <!-- תצוגת הבנות שנבחרו (תוגיות למחיקה מהירה) -->
+          @if ((form.selected_client_ids?.length || 0) > 0) {
+            <div class="selected-chips-container" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+              @for (clientId of form.selected_client_ids; track clientId) {
+                @let client = getClientById(clientId);
+                @if (client) {
+                  <div class="client-chip" style="background: #f3f4f6; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--c-border); font-weight: 500;">
+                    <span>{{ client.first_name }} {{ client.last_name }}</span>
+                    <span (click)="$event.stopPropagation(); toggleClientSelection(client.id)" 
+                          style="cursor: pointer; color: #ef4444; font-weight: bold; font-size: 13px; padding: 0 2px;">✕</span>
+                  </div>
+                }
+              }
+            </div>
+          }
+
+          <!-- חלונית הבחירה הצפה (Dropdown Panel) -->
+          @if (showClientsDropdown) {
+            <div class="dropdown-panel" style="position: absolute; top: 100%; left: 0; right: 0; z-index: 110; background: #fff; border: 2px solid var(--c-border); border-radius: var(--r-md); box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-top: 5px; padding: 12px;" (click)="$event.stopPropagation()">
+              
+              <!-- תיבת קלט לסינון וחיפוש חופשי -->
+              <div style="margin-bottom: 10px;">
+                <input type="text" 
+                       [(ngModel)]="clientSearchTerm" 
+                       placeholder="הקלידי שם תלמידה לסינון מהיר..." 
+                       style="width: 100%; padding: 9px 12px; border: 1px solid var(--c-border); border-radius: var(--r-sm); outline: none; font-size: 13px; background: #fafafa;">
+              </div>
+
+              <!-- רשימת התלמידות המסוננת -->
+              <div class="clients-scroll-box" style="max-height: 170px; overflow-y: auto; padding-right: 2px;">
+                @for (client of filteredClients(); track client.id) {
+                  <label class="toggle-row" style="margin-bottom: 9px; font-weight: 500; font-size: 13.5px; display: flex; align-items: center; gap: 8px; cursor: pointer;" 
+                         [style.opacity]="form.session_type === 'group' && !isClientSelected(client.id) && ((form.selected_client_ids?.length || 0) >= (form.max_capacity || 0)) ? '0.45' : '1'">
+                    <span class="switch">
+                      <input type="checkbox" 
+                             [checked]="isClientSelected(client.id)"
+                             (change)="toggleClientSelection(client.id)"
+                             [disabled]="form.session_type === 'group' && !isClientSelected(client.id) && ((form.selected_client_ids?.length || 0) >= (form.max_capacity || 0))">
+                      <span class="track"></span>
+                    </span>
+                    {{ client.first_name }} {{ client.last_name }}
+                  </label>
+                } @empty {
+                  <div style="color: var(--c-text-3); text-align: center; padding: 16px 0; font-size: 13px;">
+                    לא נמצאה תלמידה בשם זה
+                  </div>
+                }
+              </div>
+              
+              <!-- כפתור סגירה מהיר בתחתית החלונית -->
+              <div style="border-top: 1px solid var(--c-border); margin-top: 8px; padding-top: 8px; text-align: left;">
+                <button type="button" class="btn btn-outline" (click)="showClientsDropdown = false" style="padding: 4px 12px; font-size: 12px; height: auto;">סגור רשימה</button>
+              </div>
+
+            </div>
+          }
+        </div>
+        <!-- ════════════════════════════════════════════ -->
+
+        <div class="form-field">
+          <label>מיקום</label>
+          <input [(ngModel)]="form.location" placeholder="אולם א׳, חדר פילאטיס...">
+        </div>
+
+        <div class="form-field">
+          <label>הערות</label>
+          <textarea [(ngModel)]="form.notes" placeholder="פרטים נוספים..."></textarea>
+        </div>
+
+        @if (!editMode) {
+          <label class="toggle-row">
+            <span class="switch">
+              <input type="checkbox" [(ngModel)]="form.is_recurring">
+              <span class="track"></span>
+            </span>
+            שיעור קבוע — חוזר כל שבוע
+          </label>
+
+          @if (form.is_recurring) {
+            <div class="toggle-extra">
+              <span>צרי שיעורים ל-</span>
+              <select [(ngModel)]="form.weeks_ahead">
+                <option [value]="13">3 חודשים</option>
+                <option [value]="26">חצי שנה</option>
+                <option [value]="52">שנה שלמה</option>
+              </select>
+              <span>קדימה</span>
+              @if (recurringPreview()) {
+                <span class="recur-preview">· {{ recurringPreview() }}</span>
+              }
+            </div>
+          }
+        }
+
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-outline" (click)="showSessionModal = false">ביטול</button>
+        <button class="btn btn-primary" (click)="saveSession()"
+                [disabled]="saveLoading || !form.title || !form.start_time">
+          @if (saveLoading) { <span class="btn-spinner"></span> }
+          {{ editMode ? 'עדכן שיעור' : (form.is_recurring ? 'צרי סדרה' : 'שמרי שיעור') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ─── מודאל צפייה בפרטי שיעור קיים (Detail Modal) ─── -->
+@if (showDetailModal && selectedSession) {
+  <div class="modal-backdrop" (click)="showDetailModal = false">
+    <div class="modal modal-lg" (click)="$event.stopPropagation()">
+
+      <div class="modal-head">
+        <div class="sess-head-row">
+          <div class="sess-icon" [class.sess-icon-private]="selectedSession.session_type === 'private'">
+            {{ selectedSession.session_type === 'private' ? '🔒' : '👥' }}
+          </div>
+          <div class="sess-head-text">
+            <h2>
+              {{ selectedSession.title }}
+              @if (selectedSession.is_recurring) {
+                <span class="recur-chip">🔁 קבוע</span>
+              }
+            </h2>
+            <span class="badge" [ngClass]="selectedSession.session_type === 'group' ? 'badge-group' : 'badge-private'">
+              {{ selectedSession.session_type === 'group' ? 'קבוצתי' : 'פרטי' }}
+            </span>
+          </div>
+          <div class="sess-head-actions">
+            <button class="btn btn-secondary btn-sm" (click)="openEdit()">✏️ עריכה</button>
+            @if (selectedSession.price_per_month > 0) {
+              <button class="btn btn-success btn-sm" (click)="chargeClients()" title="חייב את כל הנרשמות החודש">
+                💳 חייב ₪{{ selectedSession.price_per_month }}
+              </button>
+            }
+            <button class="btn btn-danger btn-sm" (click)="deleteSession()" title="מחק שיעור זה">🗑</button>
+            @if (selectedSession.is_recurring) {
+              <button class="btn btn-danger btn-sm" (click)="deleteAllFuture()" title="בטל כל שיעורי הסדרה מהיום ואילך">❌ בטל קביעות</button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- גריד מידע מהיר מעוגל -->
+        <div class="sess-info-grid">
+          <div class="sess-info-item">
+            <span class="sess-info-icon">📅</span>
+            <div>
+              <div class="sess-info-label">תאריך</div>
+              <div class="sess-info-val">{{ selectedSession.start_time | date:'EEEE, d/M/yyyy' }}</div>
+            </div>
+          </div>
+          <div class="sess-info-item">
+            <span class="sess-info-icon">🕐</span>
+            <div>
+              <div class="sess-info-label">שעה</div>
+              <div class="sess-info-val">{{ selectedSession.start_time | date:'HH:mm' }}</div>
+            </div>
+          </div>
+          <div class="sess-info-item">
+            <span class="sess-info-icon">⏱</span>
+            <div>
+              <div class="sess-info-label">משך</div>
+              <div class="sess-info-val">{{ selectedSession.duration_minutes }} דקות</div>
+            </div>
+          </div>
+          <div class="sess-info-item">
+            <span class="sess-info-icon">📍</span>
+            <div>
+              <div class="sess-info-label">מיקום</div>
+              <div class="sess-info-val">{{ selectedSession.location || '—' }}</div>
+            </div>
+          </div>
+          @if (selectedSession.session_type === 'group') {
+            <div class="sess-info-item">
+              <span class="sess-info-icon">👥</span>
+              <div>
+                <div class="sess-info-label">תפוסה</div>
+                <div class="sess-info-val">
+                  {{ selectedSession.registered_count }}/{{ selectedSession.max_capacity }}
+                  @if (selectedSession.available_spots > 0) {
+                    <span class="spots-ok">({{ selectedSession.available_spots }} פנויות)</span>
+                  } @else {
+                    <span class="badge badge-private" style="font-size:10px">מלא</span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+          @if (selectedSession.price_per_month > 0) {
+            <div class="sess-info-item">
+              <span class="sess-info-icon">💰</span>
+              <div>
+                <div class="sess-info-label">מחיר חודשי</div>
+                <div class="sess-info-val">₪{{ selectedSession.price_per_month }}</div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- רשימת נרשמות נוכחית לשיעור קבוצתי -->
+        @if (selectedSession.session_type === 'group') {
+          <div class="section-title">נרשמות לשיעור</div>
+
+          @if (registrations.length === 0) {
+            <div class="empty-state" style="padding:24px 0">
+              <div class="empty-icon">🧘</div>
+              <p>אין נרשמות עדיין</p>
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr><th>שם</th><th>סטטוס</th><th>נוכחות</th><th></th></tr>
+                </thead>
+                <tbody>
+                  @for (reg of registrations; track reg.id) {
+                    <tr [class.waitlist-row]="reg.on_waitlist">
+                      <td>{{ reg.client?.first_name }} {{ reg.client?.last_name }}</td>
+                      <td>
+                        @if (reg.on_waitlist) {
+                          <span class="badge badge-waitlist">המתנה</span>
+                        } @else {
+                          <span class="badge badge-group">רשומה ✓</span>
+                        }
+                      </td>
+                      <td>
+                        @if (!reg.on_waitlist) {
+                          <label class="attend-check">
+                            <input type="checkbox" [checked]="reg.attended === true" (change)="toggleAttendance(reg)">
+                            הגיעה
+                          </label>
+                        }
+                      </td>
+                      <td>
+                        <button class="btn btn-danger btn-xs" (click)="removeRegistration(reg.id)">הסר</button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          <!-- הוספה מהירה מחוץ לטופס הראשוני (רשימת לא רשומות) -->
+          @if (unregisteredClients().length > 0) {
+            <div class="add-reg-row" style="display: flex; gap: 10px; margin-top: 16px;">
+              <select #cs style="padding: 8px 12px; border: 2px solid var(--c-border); border-radius: var(--r-sm); outline: none; background: #fff; cursor: pointer;">
+                @for (c of unregisteredClients(); track c.id) {
+                  <option [value]="c.id">{{ c.first_name }} {{ c.last_name }}</option>
+                }
+              </select>
+              <button class="btn btn-primary btn-sm" (click)="registerClient(+cs.value)">+ הרשמי</button>
+            </div>
+          }
+        }
+
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-outline" (click)="showDetailModal = false">סגור</button>
+      </div>
+
+    </div>
+  </div>
+}

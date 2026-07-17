@@ -1,0 +1,269 @@
+.cal-card { padding: 20px; }
+
+/* ─── FullCalendar overrides ─── */
+:host ::ng-deep {
+  .fc {
+    font-family: 'Rubik', inherit;
+    --fc-border-color: #f0f2f7;
+    --fc-today-bg-color: rgba(99,102,241,.03);
+    --fc-page-bg-color: #fff;
+    --fc-neutral-bg-color: #fafafd;
+    --fc-event-border-color: transparent;
+  }
+
+  .fc-toolbar.fc-header-toolbar { margin-bottom: 20px !important; }
+
+  .fc-toolbar-title {
+    font-size: 17px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+  }
+
+  .fc-button-group .fc-button,
+  .fc-button {
+    background: transparent !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    color: #475569 !important;
+    font-family: inherit !important;
+    font-size: 13px !important;
+    padding: 5px 11px !important;
+    font-weight: 500 !important;
+    transition: all .15s !important;
+    box-shadow: none !important;
+    &:hover {
+      background: #eef2ff !important;
+      border-color: #6366f1 !important;
+      color: #6366f1 !important;
+    }
+  }
+
+  .fc-button-active,
+  .fc-button-primary:not(:disabled).fc-button-active {
+    background: #6366f1 !important;
+    border-color: #6366f1 !important;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(99,102,241,.3) !important;
+  }
+
+  .fc-col-header-cell {
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    letter-spacing: .5px !important;
+    color: #94a3b8 !important;
+    padding: 10px 0 !important;
+    background: #fafafd !important;
+  }
+
+  .fc-event {
+    border-radius: 8px !important;
+    padding: 2px 0 !important;
+    cursor: pointer !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1) !important;
+    transition: transform .12s ease, box-shadow .12s ease !important;
+    overflow: hidden !important;
+    &:hover {
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 14px rgba(0,0,0,.18) !important;
+    }
+  }
+  .fc-event-main { overflow: hidden !important; height: 100% !important; }
+
+  .fc-timegrid-slot        { height: 44px !important; }
+  .fc-timegrid-slot-label  { font-size: 11px !important; color: #94a3b8 !important; }
+  .fc-now-indicator-line   { border-color: #ef4444 !important; border-width: 2px !important; }
+  .fc-now-indicator-arrow  { border-top-color: #ef4444 !important; border-bottom-color: #ef4444 !important; }
+  .fc-highlight            { background: rgba(99,102,241,.08) !important; }
+  .fc-day-today            { background: rgba(99,102,241,.025) !important; }
+  .fc-day-today .fc-col-header-cell-cushion { color: #6366f1 !important; font-weight: 800 !important; }
+
+  /* list view */
+  .fc-list-event:hover td { background: #f5f3ff !important; }
+  .fc-list-event-title { font-weight: 600 !important; }
+}
+
+/* ─── Event cards ─── */
+:host ::ng-deep .ev-card {
+  padding: 4px 7px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+:host ::ng-deep .ev-title-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+:host ::ng-deep .ev-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+:host ::ng-deep .ev-recur-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.65);
+  flex-shrink: 0;
+}
+
+:host ::ng-deep .ev-type-tag {
+  font-size: 10.5px;
+  color: rgba(255,255,255,.85);
+  font-weight: 600;
+}
+
+:host ::ng-deep .ev-cap-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+:host ::ng-deep .ev-cap-track {
+  flex: 1;
+  height: 3px;
+  background: rgba(255,255,255,.25);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+:host ::ng-deep .ev-cap-fill {
+  height: 100%;
+  background: rgba(255,255,255,.75);
+  border-radius: 2px;
+  transition: width .3s;
+  &.full { background: #fbbf24; }
+}
+
+:host ::ng-deep .ev-cap-num {
+  font-size: 10px;
+  color: rgba(255,255,255,.8);
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  &.full { color: #fbbf24; }
+}
+
+/* ─── Detail modal ─── */
+.sess-head-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.sess-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: #eef2ff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  &.sess-icon-private { background: #fff7ed; }
+}
+
+.sess-head-text {
+  flex: 1;
+  h2 {
+    font-size: 18px; font-weight: 700;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 5px;
+  }
+}
+
+.recur-chip {
+  font-size: 11.5px;
+  background: #eef2ff; color: #6366f1;
+  padding: 2px 9px; border-radius: 20px;
+  font-weight: 600;
+}
+
+.sess-head-actions {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+
+/* ─── Info grid ─── */
+.sess-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  background: #f8f7ff;
+  border-radius: 12px;
+  margin-bottom: 4px;
+}
+
+.sess-info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.sess-info-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+
+.sess-info-label {
+  font-size: 11px; font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
+.sess-info-val {
+  font-size: 13.5px; font-weight: 600; color: #1e293b;
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+}
+
+.spots-ok { color: #15803d; font-size: 12px; }
+
+/* ─── Registrations ─── */
+.waitlist-row td { color: #94a3b8; font-style: italic; }
+
+.attend-check {
+  display: flex; align-items: center; gap: 6px;
+  cursor: pointer; font-size: 13px;
+  input { width: auto; accent-color: #6366f1; cursor: pointer; }
+}
+
+.add-reg-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: #f4f5fa;
+  border-radius: 10px;
+  margin-top: 10px;
+
+  select {
+    flex: 1; padding: 8px 12px;
+    border: 1.5px solid #e2e8f0; border-radius: 8px;
+    font-size: 14px; font-family: inherit; background: #fff; outline: none;
+    &:focus { border-color: #6366f1; }
+  }
+}
+
+/* ─── Recurring preview text ─── */
+.recur-preview {
+  font-size: 12px;
+  color: #6366f1;
+  font-weight: 600;
+}
+
+/* ─── Save button spinner ─── */
+.btn-spinner {
+  display: inline-block;
+  width: 13px; height: 13px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}

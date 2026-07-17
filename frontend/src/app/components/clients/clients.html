@@ -1,0 +1,230 @@
+<div class="page-header">
+  <div class="page-title">
+    <h1>לקוחות</h1>
+    <p>ניהול פרטי לקוחות, שיעורים ותשלומים</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-primary" (click)="openNew()">+ לקוחה חדשה</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="cl-toolbar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input"
+             [(ngModel)]="search"
+             (ngModelChange)="applyFilter()"
+             placeholder="חיפוש לפי שם, מייל, טלפון...">
+    </div>
+    <span class="count-chip">{{ filtered.length }} לקוחות</span>
+  </div>
+
+  @if (filtered.length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">👤</div>
+      <h3>לא נמצאו לקוחות</h3>
+      <p>נסי לשנות את החיפוש או להוסיף לקוחה חדשה</p>
+    </div>
+  } @else {
+    <div class="cl-grid">
+      @for (client of filtered; track client.id) {
+        <div class="cl-card" [class.cl-card-inactive]="!client.active" (click)="openDetail(client)">
+          <div class="cl-avatar" [style.background]="avatarColor(client)">
+            {{ initials(client) }}
+          </div>
+          <div class="cl-info">
+            <div class="cl-name">{{ client.first_name }} {{ client.last_name }}</div>
+            <div class="cl-sub">{{ client.phone || client.email }}</div>
+          </div>
+          <span class="badge" [ngClass]="client.active ? 'badge-active' : 'badge-inactive'">
+            {{ client.active ? 'פעילה' : 'לא פעילה' }}
+          </span>
+          <div class="cl-actions" (click)="$event.stopPropagation()">
+            <button class="btn btn-ghost btn-icon" (click)="openEdit(client)" title="עריכה">✏️</button>
+            <button class="btn btn-ghost btn-icon" (click)="toggleActive(client)"
+                    [title]="client.active ? 'השבתי' : 'הפעלי'">
+              {{ client.active ? '⏸' : '▶️' }}
+            </button>
+            <button class="btn btn-danger btn-icon" (click)="deleteClient(client)" title="מחקי">🗑</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- ─── Add / Edit modal ─── -->
+@if (showFormModal) {
+  <div class="modal-backdrop" (click)="showFormModal = false">
+    <div class="modal" (click)="$event.stopPropagation()">
+
+      <div class="modal-head">
+        <h2>{{ editMode ? 'עריכת לקוחה' : 'לקוחה חדשה' }}</h2>
+        <p>{{ editMode ? 'עדכני את פרטי הלקוחה' : 'הוסיפי לקוחה חדשה למערכת' }}</p>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-row-2">
+          <div class="form-field">
+            <label>שם פרטי</label>
+            <input [(ngModel)]="form.first_name" placeholder="שרה">
+          </div>
+          <div class="form-field">
+            <label>שם משפחה</label>
+            <input [(ngModel)]="form.last_name" placeholder="כהן">
+          </div>
+        </div>
+        <div class="form-field">
+          <label>מייל</label>
+          <input type="email" [(ngModel)]="form.email" placeholder="sarah@example.com">
+        </div>
+        <div class="form-field">
+          <label>טלפון</label>
+          <input [(ngModel)]="form.phone" placeholder="050-0000000">
+        </div>
+        
+        <!-- התוספת החדשה: אמצעי תשלום -->
+        <div class="form-field">
+          <label>אמצעי תשלום חודשי</label>
+          <select [(ngModel)]="form.payment_method">
+            <option value="CASH">מזומן (הוספה לחוב)</option>
+            <option value="TRANSFER">העברה בנקאית (הוספה לחוב)</option>
+            <option value="STANDING_ORDER">הוראת קבע (חיוב אוטומטי)</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label>הערות</label>
+          <textarea [(ngModel)]="form.notes" placeholder="מגבלות, העדפות, מידע רלוונטי..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-outline" (click)="showFormModal = false">ביטול</button>
+        <button class="btn btn-primary" (click)="saveClient()">שמרי</button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ─── Detail modal ─── -->
+@if (showDetailModal && selectedClient) {
+  <div class="modal-backdrop" (click)="showDetailModal = false">
+    <div class="modal modal-xl" (click)="$event.stopPropagation()">
+
+      <div class="modal-head">
+        <div class="det-head-row">
+          <div class="det-avatar" [style.background]="avatarColor(selectedClient)">
+            {{ initials(selectedClient) }}
+          </div>
+          <div class="det-head-info">
+            <h2>{{ selectedClient.first_name }} {{ selectedClient.last_name }}</h2>
+            <div class="det-pills">
+              <span class="pill">📧 {{ selectedClient.email }}</span>
+              @if (selectedClient.phone) {
+                <span class="pill">📞 {{ selectedClient.phone }}</span>
+              }
+              <span class="badge" [ngClass]="selectedClient.active ? 'badge-active' : 'badge-inactive'">
+                {{ selectedClient.active ? 'פעילה' : 'לא פעילה' }}
+              </span>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" (click)="openEdit(selectedClient); showDetailModal = false">
+            ✏️ עריכה
+          </button>
+        </div>
+
+        @if (selectedClient.notes) {
+          <div class="det-notes">📝 {{ selectedClient.notes }}</div>
+        }
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Registrations -->
+        <div class="section-title">שיעורים</div>
+
+        @if (clientRegistrations.length === 0) {
+          <div class="empty-state" style="padding:20px 0">
+            <div class="empty-icon">📅</div>
+            <p>לא רשומה לשיעורים עדיין</p>
+          </div>
+        } @else {
+          <table>
+            <thead>
+              <tr><th>שיעור</th><th>תאריך</th><th>נוכחות</th></tr>
+            </thead>
+            <tbody>
+              @for (reg of clientRegistrations; track reg.id) {
+                <tr>
+                  <td><strong>{{ reg.session?.title }}</strong></td>
+                  <td>{{ formatDate(reg.session?.start_time) }}</td>
+                  <td>
+                    @if (reg.on_waitlist) {
+                      <span class="badge badge-waitlist">המתנה</span>
+                    } @else if (reg.attended === true) {
+                      <span class="badge badge-paid">✓ הגיעה</span>
+                    } @else {
+                      <span class="badge badge-inactive">—</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+
+        <!-- Payments -->
+        <div class="section-title">
+          <span>תשלומים</span>
+          @if (totalDebt() > 0) {
+            <span class="debt-chip">חוב ₪{{ totalDebt() }}</span>
+          }
+        </div>
+
+        <div class="pay-form">
+          <input type="number" [(ngModel)]="paymentForm.amount" placeholder="₪ סכום" class="pay-amt">
+          <input [(ngModel)]="paymentForm.description" placeholder="תיאור (אופציונלי)" class="pay-desc">
+          <button class="btn btn-success btn-sm" (click)="addPayment()">+ הוסיפי</button>
+        </div>
+
+        @if (clientPayments.length === 0) {
+          <p class="pay-empty">אין תשלומים רשומים</p>
+        } @else {
+          <table>
+            <thead>
+              <tr><th>תיאור</th><th>סכום</th><th>תאריך</th><th>סטטוס</th><th></th></tr>
+            </thead>
+            <tbody>
+              @for (p of clientPayments; track p.id) {
+                <tr>
+                  <td>{{ p.description || '—' }}</td>
+                  <td><strong>₪{{ p.amount }}</strong></td>
+                  <td>{{ formatDate(p.created_at) }}</td>
+                  <td>
+                    <span class="badge" [ngClass]="p.status === 'paid' ? 'badge-paid' : 'badge-pending'">
+                      {{ p.status === 'paid' ? 'שולם ✓' : 'ממתין' }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (p.status !== 'paid') {
+                      <button class="btn btn-success btn-xs" (click)="markPaid(p)">סמני שולם</button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-outline" (click)="showDetailModal = false">סגרי</button>
+      </div>
+
+    </div>
+  </div>
+}

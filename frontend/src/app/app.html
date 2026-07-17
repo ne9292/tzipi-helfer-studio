@@ -1,0 +1,48 @@
+<app-toast-container></app-toast-container>
+
+<div class="app-shell" dir="rtl">
+  <aside class="sidebar">
+    <div class="logo-area">
+      <div class="logo-ring">
+        <img src="logo.png" class="logo-img" alt="לוגו"
+             (error)="logoImg.style.display='none'; placeholder.style.display='flex'"
+             #logoImg>
+        <div class="logo-placeholder" #placeholder style="display:none">💪</div>
+      </div>
+      <div class="studio-name">
+        מכון כושר
+        <small>לנשים ובנות</small>
+      </div>
+    </div>
+
+    <nav class="nav-section">
+      <div class="nav-label">ניהול</div>
+      <ul class="nav-links">
+        <li>
+          <a routerLink="/dashboard" routerLinkActive="active">
+            <span class="nav-icon">📊</span>
+            <span>דשבורד</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/calendar" routerLinkActive="active">
+            <span class="nav-icon">📅</span>
+            <span>יומן שיעורים</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/clients" routerLinkActive="active">
+            <span class="nav-icon">👥</span>
+            <span>לקוחות</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-bottom">מערכת ניהול · v1.0</div>
+  </aside>
+
+  <main class="main-content">
+    <router-outlet />
+  </main>
+</div>

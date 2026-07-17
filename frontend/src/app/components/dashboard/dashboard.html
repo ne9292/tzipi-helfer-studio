@@ -1,0 +1,97 @@
+<div class="page-header">
+  <div class="page-title">
+    <h1>דשבורד</h1>
+    <p>סיכום פעילות הסטודיו</p>
+  </div>
+</div>
+
+@if (stats) {
+  <div class="stats-row">
+
+    <div class="stat-card purple">
+      <div class="stat-top">
+        <span class="stat-label">שיעורים היום</span>
+        <span class="stat-icon-bg">📅</span>
+      </div>
+      <div class="stat-value">{{ stats.today_sessions }}</div>
+      <div class="stat-sub">{{ stats.today_sessions === 1 ? 'שיעור אחד' : 'שיעורים' }}</div>
+    </div>
+
+    <div class="stat-card cyan">
+      <div class="stat-top">
+        <span class="stat-label">לקוחות היום</span>
+        <span class="stat-icon-bg">🏃‍♀️</span>
+      </div>
+      <div class="stat-value">{{ stats.today_clients }}</div>
+      <div class="stat-sub">נרשמות לשיעורים</div>
+    </div>
+
+    <div class="stat-card green">
+      <div class="stat-top">
+        <span class="stat-label">לקוחות פעילות</span>
+        <span class="stat-icon-bg">👥</span>
+      </div>
+      <div class="stat-value">{{ stats.total_active_clients }}</div>
+      <div class="stat-sub">במועדון</div>
+    </div>
+
+    <div class="stat-card amber">
+      <div class="stat-top">
+        <span class="stat-label">הכנסות החודש</span>
+        <span class="stat-icon-bg">💳</span>
+      </div>
+      <div class="stat-value">₪{{ stats.monthly_revenue | number:'1.0-0' }}</div>
+      <div class="stat-sub">שולם</div>
+    </div>
+
+  </div>
+
+  <div class="card upcoming-card">
+    <div class="section-header">
+      <h2>שיעורים קרובים</h2>
+      <a routerLink="/calendar" class="btn btn-outline btn-sm">לכל היומן ←</a>
+    </div>
+
+    @if (stats.upcoming_sessions.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">📅</div>
+        <p>אין שיעורים מתוכננים</p>
+      </div>
+    } @else {
+      <div class="sessions-list">
+        @for (s of stats.upcoming_sessions; track s.id) {
+          <div class="session-row" [class.full]="s.available_spots === 0 && s.session_type === 'group'">
+            <div class="session-dot" [class.private]="s.session_type === 'private'"></div>
+            <div class="session-info">
+              <span class="session-title">
+                {{ s.title }}
+                @if (s.is_recurring) { <span class="recur">🔁</span> }
+              </span>
+              <span class="session-meta">{{ formatDate(s.start_time) }} · {{ formatTime(s.start_time) }} · {{ s.duration_minutes }} דק'</span>
+            </div>
+            <div class="session-right">
+              <span class="badge" [ngClass]="s.session_type === 'group' ? 'badge-group' : 'badge-private'">
+                {{ s.session_type === 'group' ? 'קבוצתי' : 'פרטי' }}
+              </span>
+              @if (s.session_type === 'group') {
+                <div class="capacity-bar-wrap">
+                  <div class="capacity-bar">
+                    <div class="fill" [style.width.%]="(s.registered_count / s.max_capacity) * 100"
+                         [class.full]="s.available_spots === 0"></div>
+                  </div>
+                  <span class="cap-text">{{ s.registered_count }}/{{ s.max_capacity }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+} @else {
+  <div class="loading-screen">
+    <div class="spinner"></div>
+    <p>טוען נתונים...</p>
+  </div>
+}

@@ -28,7 +28,7 @@ app = FastAPI(title="Fitness Studio API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200", settings.frontend_url.rstrip("/") if hasattr(settings, "frontend_url") else "http://localhost:4200"],
+    allow_origins=["https://tzipi-helfer-studio.vercel.app", settings.frontend_url.rstrip("/") if hasattr(settings, "frontend_url") else "http://localhost:4200"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

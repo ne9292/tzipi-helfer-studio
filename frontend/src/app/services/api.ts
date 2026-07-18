@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Client, Session, Registration, Payment, DashboardStats, SessionType } from '../models/models';
 
-const BASE = 'http://localhost:8000/api';
+const BASE = 'https://tzipi-helfer-studio.onrender.com/api';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {

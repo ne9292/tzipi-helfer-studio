@@ -7,7 +7,7 @@ from database import Base, engine, get_db
 from routers import clients, sessions, registrations, payments
 import crud
 import schemas
-from services.scheduler import start_scheduler, stop_scheduler
+from services.scheduler import start_scheduler, stop_scheduler, send_nightly_reminders
 from config import settings
 
 Base.metadata.create_all(bind=engine)
@@ -53,6 +53,15 @@ def shutdown():
 @app.get("/api/dashboard", response_model=schemas.DashboardStats)
 def dashboard(db: Session = Depends(get_db)):
     return crud.get_dashboard_stats(db)
+
+
+@app.post("/api/trigger-reminders")
+def trigger_reminders_endpoint():
+    try:
+        send_nightly_reminders()
+        return {"status": "success", "message": "Nightly reminders triggered manually via external cron"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 @app.get("/")

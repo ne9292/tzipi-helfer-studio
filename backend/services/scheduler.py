@@ -33,12 +33,12 @@ def start_scheduler():
     # Run every night at 20:00 Israel time
     scheduler.add_job(
         send_nightly_reminders,
-        CronTrigger(hour=1, minute=30, timezone="Asia/Jerusalem"),
+        CronTrigger(hour=8, minute=0, timezone="Asia/Jerusalem"),
         id="nightly_reminders",
         replace_existing=True,
     )
     scheduler.start()
-    print("[SCHEDULER] Started — nightly reminders at 1:30 IL")
+    print("[SCHEDULER] Started — nightly reminders at 8:00 IL")
 
 
 def stop_scheduler():

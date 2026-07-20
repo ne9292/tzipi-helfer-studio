@@ -54,12 +54,11 @@ def shutdown():
 def dashboard(db: Session = Depends(get_db)):
     return crud.get_dashboard_stats(db)
 
-
-@app.post("/api/trigger-reminders")
+@app.get("/api/trigger-reminders")
 def trigger_reminders_endpoint():
     try:
         send_nightly_reminders()
-        return {"status": "success", "message": "Nightly reminders triggered manually via external cron"}
+        return {"status": "success", "message": "Nightly reminders triggered successfully via GET"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
